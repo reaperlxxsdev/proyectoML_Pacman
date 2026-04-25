@@ -5,3 +5,4 @@ gymnasium[atari]==0.29.1
 gymnasium[accept-rom-license]
 opencv-python-headless==4.9.0.80
 websockets==12.0
+gdown

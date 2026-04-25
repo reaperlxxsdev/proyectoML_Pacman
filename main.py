@@ -1,23 +1,31 @@
 import asyncio
 import cv2
 import base64
+import os
+import gdown
 import gymnasium as gym
 import ale_py.roms
-from fastapi import FastAPI, WebSocket
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from stable_baselines3 import DQN
 
-# 1. Inicializamos el servidor web
+# --- NUEVA SECCIÓN: DESCARGA AUTOMÁTICA DEL MODELO ---
+file_id = '1KeJDGDuFoovIOK-qXYY3vjGW-78CKMGP'
+url = f'https://drive.google.com/uc?id={file_id}'
+output_file = 'ddqn_mspacman_500k_pasos.zip'
+
+# Solo lo descarga si el archivo no existe en el servidor
+if not os.path.exists(output_file):
+    print("Descargando el cerebro de la IA desde Google Drive...")
+    gdown.download(url, output_file, quiet=False)
+# -----------------------------------------------------
+
 app = FastAPI()
 
-# 2. Cargamos el modelo y el entorno (fuera del bucle para que cargue solo una vez)
 print("Cargando modelo...")
-modelo = DQN.load("ddqn_mspacman_500k_pasos")
-# Usamos rgb_array para poder capturar los fotogramas sin abrir una ventana de sistema
+modelo = DQN.load(output_file)
 env = gym.make("ALE/MsPacman-v5", render_mode="rgb_array")
-print("Modelo cargado y entorno listo.")
+print("Modelo cargado y entorno listo. Esperando conexión...")
 
-
-# 3. Creamos el "túnel" de comunicación (WebSocket)
 @app.websocket("/ws/play")
 async def play_game(websocket: WebSocket):
     # Aceptamos la conexión del navegador del usuario
